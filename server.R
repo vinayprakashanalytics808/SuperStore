@@ -1,14 +1,23 @@
 library(shiny)
+library(dplyr)
+require(reshape)
+library(rAmCharts)
+# source("Data_wrangling.R")
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output, session) {
   
+  Sample_Superstore <- reactiveValues()
+
+  
+  Sample_Superstore <- data.frame()
+
   observe({
     
     tryCatch({
       # req(input$file1)
-      df <- read_excel(input$file1$datapath, 1)
-      df_100 <- head(df, n = 100)
+      Sample_Superstore <- read_excel(input$file1$datapath, 1)
+      df_100 <- head(Sample_Superstore, n = 100)
       
       extension_file <- grepl("\\.xls$", input$file1$datapath)
       print(extension_file)
@@ -29,7 +38,7 @@ shinyServer(function(input, output, session) {
     )
     
     output$tab2 <- renderUI({
-      if(nrow(df) > 0){
+      if(nrow(Sample_Superstore) > 0){
         actionButton("go_to_tab2", "Go to Data Review")
       }
     })
@@ -42,6 +51,38 @@ shinyServer(function(input, output, session) {
     #   
     #     }
     # })
+       print(colnames(Sample_Superstore))
+
+    
+       output$category_wise_sales_trend = renderAmCharts({
+         
+       category_wise_sales <- Sample_Superstore %>%
+       group_by(`Order Date`, Category) %>%
+       summarise(`Total Sales` = sum(Sales))
+       category_wise_sales <- as.data.frame(category_wise_sales)
+       category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
+       category_wise_sales[is.na(category_wise_sales)] <- 0
+
+       amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"))
+       
+       # data('data_stock_2')
+       # amTimeSeries(data_stock_2, 'date', c('ts1', 'ts2'))
+       
+       })
+     
+    # category_wise_sales <- Sample_Superstore %>%
+    #   group_by(`Order Date`, Category) %>%
+    #   summarise(`Total Sales` = sum(Sales))
+    # category_wise_sales <- as.data.frame(category_wise_sales)
+    # category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
+    # category_wise_sales[is.na(category_wise_sales)] <- 0
+    # 
+    # category_wise_products <- Sample_Superstore %>%
+    #   group_by(`Order Date`, Category) %>%
+    #   summarise(`Total Products` = n_distinct(`Product ID`))
+    # category_wise_products <- as.data.frame(category_wise_products)
+    # category_wise_products <- dcast(category_wise_products, `Order Date`~Category)
+    # category_wise_products[is.na(category_wise_products)] <- 0
     
     
   })

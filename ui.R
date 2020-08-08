@@ -3,6 +3,7 @@ library(shinydashboard)
 library(DT)
 library(readxl)
 
+
 ui <- dashboardPage(
   
   dashboardHeader(title = "SuperStore"),
@@ -23,10 +24,10 @@ ui <- dashboardPage(
                           fluidRow(offset = 0, 
                                    div(dataTableOutput("input_table"),style = "padding:20px;"),
                                    div(uiOutput("tab2"),style = "padding:20px;")
-                                   # div(actionButton("go_to_tab2", "Go to Data Review"),style = "padding:20px;")
                           )),
                   tabItem(tabName = "data_set_review",
-                          h1("fg")
+                          selectInput("des_ana", "Trend", choices = ("Category sales trend")),
+                          amChartsOutput("category_wise_sales_trend",width = "100%",height = 400)
                   ))
   ))
 
