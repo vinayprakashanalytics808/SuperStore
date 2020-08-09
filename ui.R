@@ -26,9 +26,12 @@ ui <- dashboardPage(
                                    div(uiOutput("tab2"),style = "padding:20px;")
                           )),
                   tabItem(tabName = "data_set_review",
-                          selectInput("des_ana", "Trend", choices = c("Category sales trend", 
+                          selectInput("des_ana", "Sales Trend", choices = c("Category sales trend", 
                                                                       "Sub-Category sales trend")),
-                          amChartsOutput("category_wise_sales_trend",width = "100%",height = 400)
+                          amChartsOutput("sales_trend",width = "100%",height = 400),
+                          selectInput("des_ana1", "No of Products Trend", choices = c("Category products trend", 
+                                                                      "Sub-Category products trend")),
+                          amChartsOutput("products_trend",width = "100%",height = 400)
                   ))
   ))
 

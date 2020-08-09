@@ -54,9 +54,9 @@ shinyServer(function(input, output, session) {
        print(colnames(Sample_Superstore))
 
     
-       output$category_wise_sales_trend = renderAmCharts({
+         output$sales_trend = renderAmCharts({
          
-       if(input$des_ana == "Category sales trend"){
+         if(input$des_ana == "Category sales trend"){
          category_wise_sales <- Sample_Superstore %>%
          group_by(`Order Date`, Category) %>%
          summarise(`Total Sales` = sum(Sales))
@@ -64,7 +64,8 @@ shinyServer(function(input, output, session) {
          category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
          category_wise_sales[is.na(category_wise_sales)] <- 0
          
-         amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"))
+         amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"),export = TRUE,
+                      main = 'Category Sales',bullet = 'round')
          
        } else if(input$des_ana == "Sub-Category sales trend"){
          sub_category_wise_sales <- Sample_Superstore %>%
@@ -75,30 +76,42 @@ shinyServer(function(input, output, session) {
          sub_category_wise_sales[is.na(sub_category_wise_sales)] <- 0
          
          amTimeSeries(sub_category_wise_sales, "Order Date", 
-                      colnames(sub_category_wise_sales)[colnames(sub_category_wise_sales) != "Order Date"],export = TRUE)
+                      colnames(sub_category_wise_sales)[colnames(sub_category_wise_sales) != "Order Date"],export = TRUE,
+                      main = 'Sub-Category Sales',bullet = 'round')
          
        }
+         })
          
+               output$products_trend = renderAmCharts({
+             
+               if(input$des_ana1 == "Category products trend"){
+               category_wise_products <- Sample_Superstore %>%
+               group_by(`Order Date`, Category) %>%
+               summarise(`Total Products` = n_distinct(`Product ID`))
+               category_wise_products <- as.data.frame(category_wise_products)
+               category_wise_products <- dcast(category_wise_products, `Order Date`~Category)
+               category_wise_products[is.na(category_wise_products)] <- 0
+               
+               amTimeSeries(category_wise_products, "Order Date", c("Furniture", "Office Supplies", "Technology"),export = TRUE,
+                            main = 'Category Products',bullet = 'round')
+               
+             } else if(input$des_ana1 == "Sub-Category products trend"){
+               sub_category_wise_products <- Sample_Superstore %>%
+               group_by(`Order Date`, `Sub-Category`) %>%
+               summarise(`Total Products` = n_distinct(`Product ID`))
+               sub_category_wise_products <- as.data.frame(sub_category_wise_products)
+               sub_category_wise_products <- dcast(sub_category_wise_products, `Order Date`~`Sub-Category`)
+               sub_category_wise_products[is.na(sub_category_wise_products)] <- 0
+               
+               amTimeSeries(sub_category_wise_products, "Order Date", 
+                            colnames(sub_category_wise_products)[colnames(sub_category_wise_products) != "Order Date"],export = TRUE,
+                            main = 'Sub-Category Products',bullet = 'round')
+               
+             }  
       
        })
-     
-    # category_wise_sales <- Sample_Superstore %>%
-    #   group_by(`Order Date`, Category) %>%
-    #   summarise(`Total Sales` = sum(Sales))
-    # category_wise_sales <- as.data.frame(category_wise_sales)
-    # category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
-    # category_wise_sales[is.na(category_wise_sales)] <- 0
-    # 
-    # category_wise_products <- Sample_Superstore %>%
-    #   group_by(`Order Date`, Category) %>%
-    #   summarise(`Total Products` = n_distinct(`Product ID`))
-    # category_wise_products <- as.data.frame(category_wise_products)
-    # category_wise_products <- dcast(category_wise_products, `Order Date`~Category)
-    # category_wise_products[is.na(category_wise_products)] <- 0
-    
-    
   })
-  
+         
   observeEvent(input$go_to_tab2,{
     tab_switch <- switch (input$tabs,
                           "raw_data" = "data_set_review"
