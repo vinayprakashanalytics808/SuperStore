@@ -56,18 +56,30 @@ shinyServer(function(input, output, session) {
     
        output$category_wise_sales_trend = renderAmCharts({
          
-       category_wise_sales <- Sample_Superstore %>%
-       group_by(`Order Date`, Category) %>%
-       summarise(`Total Sales` = sum(Sales))
-       category_wise_sales <- as.data.frame(category_wise_sales)
-       category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
-       category_wise_sales[is.na(category_wise_sales)] <- 0
-
-       amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"))
-       
-       # data('data_stock_2')
-       # amTimeSeries(data_stock_2, 'date', c('ts1', 'ts2'))
-       
+       if(input$des_ana == "Category sales trend"){
+         category_wise_sales <- Sample_Superstore %>%
+         group_by(`Order Date`, Category) %>%
+         summarise(`Total Sales` = sum(Sales))
+         category_wise_sales <- as.data.frame(category_wise_sales)
+         category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
+         category_wise_sales[is.na(category_wise_sales)] <- 0
+         
+         amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"))
+         
+       } else if(input$des_ana == "Sub-Category sales trend"){
+         sub_category_wise_sales <- Sample_Superstore %>%
+         group_by(`Order Date`, `Sub-Category`) %>%
+         summarise(`Total Sales` = sum(Sales))
+         sub_category_wise_sales <- as.data.frame(sub_category_wise_sales)
+         sub_category_wise_sales <- dcast(sub_category_wise_sales, `Order Date`~`Sub-Category`)
+         sub_category_wise_sales[is.na(sub_category_wise_sales)] <- 0
+         
+         amTimeSeries(sub_category_wise_sales, "Order Date", 
+                      colnames(sub_category_wise_sales)[colnames(sub_category_wise_sales) != "Order Date"],export = TRUE)
+         
+       }
+         
+      
        })
      
     # category_wise_sales <- Sample_Superstore %>%
