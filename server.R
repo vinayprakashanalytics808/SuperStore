@@ -1,7 +1,11 @@
 library(shiny)
-library(dplyr)
-require(reshape)
-library(rAmCharts)
+# library(shinydashboard)
+# library(DT)
+# library(readxl)
+# library(dplyr)
+# require(reshape2)
+# library(rAmCharts)
+
 # source("Data_wrangling.R")
 
 # Define server logic required to draw a histogram
@@ -37,79 +41,97 @@ shinyServer(function(input, output, session) {
     }
     )
     
-    output$tab2 <- renderUI({
-      if(nrow(Sample_Superstore) > 0){
-        actionButton("go_to_tab2", "Go to Data Review")
-      }
-    })
+          output$tab2 <- renderUI({
+            if(nrow(Sample_Superstore) > 0){
+              actionButton("go_to_tab2", "Go to Data Review")
+            }
+          })
     
-    # output$review_tab <- renderMenu({
-    #   if(nrow(df) > 0){
-    #   sidebarMenu(
-    #     menuItem("Data Set Review", tabName = "data_set_review")
-    #   )
-    #   
-    #     }
-    # })
-       print(colnames(Sample_Superstore))
+          output$moreControls1 <- renderUI({
+            if(nrow(Sample_Superstore) > 0){
+            selectInput("des_ana", "Select Variable", choices = c("Ship Mode",
+                                                              "Segment", "Country/Region", "City","State",
+                                                              "Region", "Category", "Sub-Category"), selected = "Category")
+            }
+          })
 
-    
+          output$moreControls <- renderUI({
+            
+            if(!is.null(input$des_ana)){
+              selectizeInput("sub_cat", "sub-Div", choices = levels(factor(Sample_Superstore[[input$des_ana]])),selected = 
+                             levels(factor(Sample_Superstore[[input$des_ana]]))[1],
+                             multiple = TRUE) 
+            } 
+            
+          })
+          
+          output$moreControls2 <- renderUI({
+            
+            if(nrow(Sample_Superstore) > 0){
+              radioButtons("parameters", label = "Parameters",choices = c("Sales", "Profit"),inline = TRUE)
+            } 
+            
+          })
+          
+          
+     
+          
          output$sales_trend = renderAmCharts({
+         req(input$sub_cat)
+         req(input$parameters)
+         if(input$des_ana == "Category"){
+          
          
-         if(input$des_ana == "Category sales trend"){
+         Sample_Superstore <- Sample_Superstore %>% filter(Category%in% input$sub_cat)
          category_wise_sales <- Sample_Superstore %>%
          group_by(`Order Date`, Category) %>%
-         summarise(`Total Sales` = sum(Sales))
+         summarise(`Total Sales` = sum(!!sym(input$parameters)))
+         print(category_wise_sales)
          category_wise_sales <- as.data.frame(category_wise_sales)
-         category_wise_sales <- dcast(category_wise_sales, `Order Date`~Category)
+
+         category_wise_sales <- dcast(category_wise_sales, `Order Date`~ Category)
          category_wise_sales[is.na(category_wise_sales)] <- 0
+
+
+         amTimeSeries(category_wise_sales, "Order Date", input$sub_cat,export = TRUE,
+                      main = paste0(toString(input$des_ana)," ",toString(input$parameters)),bullet = 'round')
          
-         amTimeSeries(category_wise_sales, "Order Date", c("Furniture", "Office Supplies", "Technology"),export = TRUE,
-                      main = 'Category Sales',bullet = 'round')
+       } 
+         else if(input$des_ana == "Sub-Category"){
+
+         Sample_Superstore <- Sample_Superstore %>% filter(`Sub-Category`%in% input$sub_cat)
+         category_wise_sales <- Sample_Superstore %>%
+           group_by(`Order Date`, `Sub-Category`) %>%
+           summarise(`Total Sales` = sum(!!sym(input$parameters)))
+
+         category_wise_sales <- as.data.frame(category_wise_sales)
+
+         category_wise_sales <- dcast(category_wise_sales, `Order Date`~ `Sub-Category`)
+         category_wise_sales[is.na(category_wise_sales)] <- 0
+
+
+         amTimeSeries(category_wise_sales, "Order Date", input$sub_cat,export = TRUE,
+                      main = paste0(toString(input$des_ana)," ",toString(input$parameters)),bullet = 'round')
          
-       } else if(input$des_ana == "Sub-Category sales trend"){
-         sub_category_wise_sales <- Sample_Superstore %>%
-         group_by(`Order Date`, `Sub-Category`) %>%
-         summarise(`Total Sales` = sum(Sales))
-         sub_category_wise_sales <- as.data.frame(sub_category_wise_sales)
-         sub_category_wise_sales <- dcast(sub_category_wise_sales, `Order Date`~`Sub-Category`)
-         sub_category_wise_sales[is.na(sub_category_wise_sales)] <- 0
-         
-         amTimeSeries(sub_category_wise_sales, "Order Date", 
-                      colnames(sub_category_wise_sales)[colnames(sub_category_wise_sales) != "Order Date"],export = TRUE,
-                      main = 'Sub-Category Sales',bullet = 'round')
-         
-       }
+         }  else if(input$des_ana == "Ship Mode"){
+           Sample_Superstore <- Sample_Superstore %>% filter(`Ship Mode`%in% input$sub_cat)
+           category_wise_sales <- Sample_Superstore %>%
+             group_by(`Order Date`, `Ship Mode`) %>%
+             summarise(`Total Sales` = sum(!!sym(input$parameters)))
+           
+           category_wise_sales <- as.data.frame(category_wise_sales)
+           
+           category_wise_sales <- dcast(category_wise_sales, `Order Date`~ `Ship Mode`)
+           category_wise_sales[is.na(category_wise_sales)] <- 0
+           
+           
+           amTimeSeries(category_wise_sales, "Order Date", input$sub_cat,export = TRUE,
+                        main = paste0(toString(input$des_ana)," ",toString(input$parameters)),bullet = 'round')
+         }
          })
          
-               output$products_trend = renderAmCharts({
-             
-               if(input$des_ana1 == "Category products trend"){
-               category_wise_products <- Sample_Superstore %>%
-               group_by(`Order Date`, Category) %>%
-               summarise(`Total Products` = n_distinct(`Product ID`))
-               category_wise_products <- as.data.frame(category_wise_products)
-               category_wise_products <- dcast(category_wise_products, `Order Date`~Category)
-               category_wise_products[is.na(category_wise_products)] <- 0
+                   
                
-               amTimeSeries(category_wise_products, "Order Date", c("Furniture", "Office Supplies", "Technology"),export = TRUE,
-                            main = 'Category Products',bullet = 'round')
-               
-             } else if(input$des_ana1 == "Sub-Category products trend"){
-               sub_category_wise_products <- Sample_Superstore %>%
-               group_by(`Order Date`, `Sub-Category`) %>%
-               summarise(`Total Products` = n_distinct(`Product ID`))
-               sub_category_wise_products <- as.data.frame(sub_category_wise_products)
-               sub_category_wise_products <- dcast(sub_category_wise_products, `Order Date`~`Sub-Category`)
-               sub_category_wise_products[is.na(sub_category_wise_products)] <- 0
-               
-               amTimeSeries(sub_category_wise_products, "Order Date", 
-                            colnames(sub_category_wise_products)[colnames(sub_category_wise_products) != "Order Date"],export = TRUE,
-                            main = 'Sub-Category Products',bullet = 'round')
-               
-             }  
-      
-       })
   })
          
   observeEvent(input$go_to_tab2,{
