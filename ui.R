@@ -5,7 +5,7 @@ library(readxl)
 library(dplyr)
 require(reshape2)
 library(rAmCharts)
-
+library(rlang)
 
 ui <- dashboardPage(
   
@@ -14,6 +14,7 @@ ui <- dashboardPage(
   dashboardSidebar(sidebarMenu(id="tabs",
                                menuItem("Raw Data", tabName = "raw_data"),
                                menuItem("Data Set Review", tabName = "data_set_review"),
+                               menuItem("Clustering", tabName = "clustering"),
                                sidebarMenuOutput("review_tab")
   )),
   
@@ -22,26 +23,32 @@ ui <- dashboardPage(
                 tabItems(
                   tabItem(tabName = "raw_data",
                           fluidRow(
-                            div(fileInput("file1", "Upload data", accept = ".xls"),style = "padding:20px;")
+                            column(width = 4, div(fileInput("file1", "Upload data", accept = ".xls"),style = "padding:20px;")),
+                                   column(width = 4, br(), div(uiOutput("tab2"),style = "padding:20px;"))
                           ),
                           fluidRow(offset = 0, 
-                                   div(dataTableOutput("input_table"),style = "padding:20px;"),
-                                   div(uiOutput("tab2"),style = "padding:20px;")
+                                   div(dataTableOutput("input_table"),style = "padding:20px;")
                           )),
                   tabItem(tabName = "data_set_review",
                           fluidRow(
-                          column(width = 4, uiOutput("moreControls1")
-                                 # selectInput("des_ana", "Sales Trend", choices = c("Category sales trend", 
-                                 #                                      "Sub-Category sales trend"))
-                                 ),
+                            column(width = 4, uiOutput("moreControls3")),
+                            column(width = 4, uiOutput("moreControls5")),
+                            column(width = 4, div(uiOutput("tab3"),style = "padding:20px;"))),
+                          amChartsOutput("sales_bar",width = "100%",height = 400),br(),br(),
+                          fluidRow(
+                          column(width = 4, uiOutput("moreControls1")),
                           column(width = 4, uiOutput("moreControls")),
                           column(width = 4, uiOutput("moreControls2"))),
-                          # column(width = 4, checkboxInput("num", "Parameters", label = c("Sales", "Profit")))),
                           amChartsOutput("sales_trend",width = "100%",height = 400)
-                          # ,
-                          # selectInput("des_ana1", "No of Products Trend", choices = c("Category products trend", 
-                          #                                             "Sub-Category products trend")),
-                          # amChartsOutput("products_trend",width = "100%",height = 400)
+                  ),
+                  tabItem(tabName = "clustering",
+                          fluidRow(
+                            column(width = 4, uiOutput("moreControls31")),
+                            column(width = 4, uiOutput("moreControls51"))
+                            # column(width = 4, br(),uiOutput("moreControls52"))
+                            ),
+                          div(dataTableOutput("cluster_table"),style = "padding:20px;"),
+                          div(dataTableOutput("nocluster_table"),style = "padding:20px;")
                   ))
   ))
 
